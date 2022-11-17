@@ -57,18 +57,52 @@ class AddItemActivity : AppCompatActivity() {
             val qtd: Double = binding.editTextQtd.text.toString().toDouble()
             val item = Item(description,qtd, true,false,"")
 
+
             db.collection("users")
                 .document(currentUser?.uid!!)
                 .collection("shoppingList")
-                .add(item.toHashMap())
-                .addOnSuccessListener { documentReference ->
-                    Log.d(TAG, "DocumentSnapshot written with ID: ${documentReference.id}")
-                    finish()
+                .whereEqualTo("description", description)
+                .get()
+                .addOnSuccessListener { documents ->
+
+                    if (!documents.isEmpty) {
+                        val itemToUpdate = Item.fromDoc(documents.first())
+                        itemToUpdate.qtd = qtd
+                        itemToUpdate.done = false
+                        itemToUpdate.active = true
+
+                        db.collection("users")
+                            .document(currentUser?.uid!!)
+                            .collection("shoppingList")
+                            .document(itemToUpdate.uid)
+                            .update(itemToUpdate.toHashMap())
+                            .addOnSuccessListener { documentReference ->
+                                finish()
+                            }
+                            .addOnFailureListener { e ->
+                                Log.w(TAG, "Error adding document", e)
+                                Toast.makeText(this@AddItemActivity, "Falha de conexão", Toast.LENGTH_SHORT).show()
+                            }
+
+                    }else{
+                        db.collection("users")
+                            .document(currentUser?.uid!!)
+                            .collection("shoppingList")
+                            .add(item.toHashMap())
+                            .addOnSuccessListener { documentReference ->
+                                Log.d(TAG, "DocumentSnapshot written with ID: ${documentReference.id}")
+                                finish()
+                            }
+                            .addOnFailureListener { e ->
+                                Log.w(TAG, "Error adding document", e)
+                                Toast.makeText(this@AddItemActivity, "Falha de conexão", Toast.LENGTH_SHORT).show()
+                            }
+                    }
+
+
                 }
-                .addOnFailureListener { e ->
-                    Log.w(TAG, "Error adding document", e)
-                    Toast.makeText(this@AddItemActivity, "Falha de conexão", Toast.LENGTH_SHORT).show()
-                }
+
+
         }
     }
     companion object{
