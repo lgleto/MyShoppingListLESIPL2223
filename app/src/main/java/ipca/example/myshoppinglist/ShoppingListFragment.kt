@@ -11,6 +11,9 @@ import android.widget.BaseAdapter
 import android.widget.Button
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import ipca.example.myshoppinglist.databinding.FragmentShoppingListBinding
 
 class ShoppingListFragment : Fragment() {
@@ -21,6 +24,8 @@ class ShoppingListFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val adapter = ItemsAdapter()
+
+    private val db = Firebase.firestore
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -37,17 +42,35 @@ class ShoppingListFragment : Fragment() {
 
         val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
             if (it.resultCode == Activity.RESULT_OK){
-                val data: Intent? = it.data
-                val description = data?.getStringExtra("description")
-                val qtd = data?.getDoubleExtra("qtd", 0.0)
-                items.add(Item(description,qtd))
-                adapter.notifyDataSetChanged()
+                //val data: Intent? = it.data
+                //val description = data?.getStringExtra("description")
+                //val qtd = data?.getDoubleExtra("qtd", 0.0)
+                //items.add(Item(description,qtd, ))
+                //adapter.notifyDataSetChanged()
             }
         }
 
         binding.fabAdd.setOnClickListener {
             resultLauncher.launch(Intent(requireContext(),AddItemActivity::class.java))
         }
+
+        val currentUser = Firebase.auth.currentUser
+
+        db.collection("users")
+            .document(currentUser!!.uid)
+            .collection("shoppingList")
+            .addSnapshotListener { value, error ->
+                if(error != null) {
+                    return@addSnapshotListener
+                }
+
+                for (doc in value!!){
+                    val item = Item.fromDoc(doc)
+                    items.add(item)
+                }
+                adapter.notifyDataSetChanged()
+            }
+
 
     }
 

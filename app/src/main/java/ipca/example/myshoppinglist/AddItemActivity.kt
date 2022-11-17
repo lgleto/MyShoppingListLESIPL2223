@@ -1,8 +1,8 @@
 package ipca.example.myshoppinglist
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
@@ -26,7 +26,7 @@ class AddItemActivity : AppCompatActivity() {
 
             val description: String = binding.editTextDescription.text.toString()
             val qtd: Double = binding.editTextQtd.text.toString().toDouble()
-            val item = Item(description,qtd)
+            val item = Item(description,qtd, true,false)
 
             db.collection("users")
                 .document(currentUser?.uid!!)
@@ -38,6 +38,7 @@ class AddItemActivity : AppCompatActivity() {
                 }
                 .addOnFailureListener { e ->
                     Log.w(TAG, "Error adding document", e)
+                    Toast.makeText(this@AddItemActivity, "Falha de conexão", Toast.LENGTH_SHORT).show()
                 }
         }
     }
