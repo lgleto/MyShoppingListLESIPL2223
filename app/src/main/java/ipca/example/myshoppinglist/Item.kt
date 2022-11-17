@@ -6,7 +6,8 @@ data class Item (
     var description : String?,
     var qtd         : Double?,
     var active      : Boolean?,
-    var done        : Boolean?
+    var done        : Boolean?,
+    var uid         : String = ""
     ){
 
     fun toHashMap() : java.util.HashMap<String,Any?>{
@@ -25,7 +26,8 @@ data class Item (
                 documentSnapshot.getString("description"),
                 documentSnapshot.getDouble("qtd"),
                 documentSnapshot.getBoolean("active"),
-                documentSnapshot.getBoolean("done")
+                documentSnapshot.getBoolean("done"),
+                documentSnapshot.id
             )
         }
     }

@@ -26,6 +26,7 @@ class ShoppingListFragment : Fragment() {
     private val adapter = ItemsAdapter()
 
     private val db = Firebase.firestore
+    private val currentUser = Firebase.auth.currentUser
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -40,30 +41,22 @@ class ShoppingListFragment : Fragment() {
 
         binding.listViewItems.adapter = adapter
 
-        val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
-            if (it.resultCode == Activity.RESULT_OK){
-                //val data: Intent? = it.data
-                //val description = data?.getStringExtra("description")
-                //val qtd = data?.getDoubleExtra("qtd", 0.0)
-                //items.add(Item(description,qtd, ))
-                //adapter.notifyDataSetChanged()
-            }
-        }
-
         binding.fabAdd.setOnClickListener {
-            resultLauncher.launch(Intent(requireContext(),AddItemActivity::class.java))
+            startActivity(Intent(requireContext(),AddItemActivity::class.java))
         }
 
-        val currentUser = Firebase.auth.currentUser
+
 
         db.collection("users")
             .document(currentUser!!.uid)
             .collection("shoppingList")
+            .whereEqualTo("done", false)
             .addSnapshotListener { value, error ->
                 if(error != null) {
                     return@addSnapshotListener
                 }
 
+                items.clear()
                 for (doc in value!!){
                     val item = Item.fromDoc(doc)
                     items.add(item)
@@ -107,6 +100,24 @@ class ShoppingListFragment : Fragment() {
 
             }
             buttonMinus.setOnClickListener {
+
+                var value = items[position].qtd!! - 1.0
+
+                if (value <= 0)  {
+                    db.collection("users")
+                        .document(currentUser!!.uid)
+                        .collection("shoppingList")
+                        .document( items[position].uid)
+                        .update("done",true)
+
+                }
+
+                db.collection("users")
+                    .document(currentUser!!.uid)
+                    .collection("shoppingList")
+                    .document( items[position].uid)
+                    .update("qtd",value)
+
 
             }
 
